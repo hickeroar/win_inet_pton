@@ -7,11 +7,11 @@ setup (
     url = 'https://github.com/hickeroar/win_inet_pton',
     author = 'Ryan Vennell',
     author_email = 'ryan.vennell@gmail.com',
-    description = 'A simple, non-persistent, key-value registry in memory.',
+    description = 'Native inet_pton and inet_ntop implementation for Python on Windows (with ctypes).',
     license = open('LICENSE', 'r').read(),
     classifiers = [
         'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',\
+        'Intended Audience :: Developers',
         'Operating System :: OS Independent',
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python :: 2.7',
