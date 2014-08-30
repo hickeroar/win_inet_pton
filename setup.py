@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup (
     name = 'win_inet_pton',
-    version = '1.0.0',
+    version = '1.0.1',
     py_modules = ['win_inet_pton'],
     url = 'https://github.com/hickeroar/win_inet_pton',
     author = 'Ryan Vennell',

@@ -7,6 +7,7 @@ import socket
 import ctypes
 import os
 
+
 class sockaddr(ctypes.Structure):
     _fields_ = [("sa_family", ctypes.c_short),
                 ("__pad1", ctypes.c_ushort),
@@ -14,15 +15,30 @@ class sockaddr(ctypes.Structure):
                 ("ipv6_addr", ctypes.c_byte * 16),
                 ("__pad2", ctypes.c_ulong)]
 
-WSAStringToAddressA = ctypes.windll.ws2_32.WSAStringToAddressA
-WSAAddressToStringA = ctypes.windll.ws2_32.WSAAddressToStringA
+if hasattr(ctypes, 'windll'):
+    WSAStringToAddressA = ctypes.windll.ws2_32.WSAStringToAddressA
+    WSAAddressToStringA = ctypes.windll.ws2_32.WSAAddressToStringA
+else:
+    def not_windows():
+        raise SystemError(
+            "Invalid platform. ctypes.windll must be available."
+        )
+    WSAStringToAddressA = not_windows
+    WSAAddressToStringA = not_windows
+
 
 def inet_pton(address_family, ip_string):
     addr = sockaddr()
     addr.sa_family = address_family
     addr_size = ctypes.c_int(ctypes.sizeof(addr))
 
-    if WSAStringToAddressA(ip_string, address_family, None, ctypes.byref(addr), ctypes.byref(addr_size)) != 0:
+    if WSAStringToAddressA(
+            ip_string,
+            address_family,
+            None,
+            ctypes.byref(addr),
+            ctypes.byref(addr_size)
+    ) != 0:
         raise socket.error(ctypes.FormatError())
 
     if address_family == socket.AF_INET:
@@ -31,6 +47,7 @@ def inet_pton(address_family, ip_string):
         return ctypes.string_at(addr.ipv6_addr, 16)
 
     raise socket.error('unknown address family')
+
 
 def inet_ntop(address_family, packed_ip):
     addr = sockaddr()
@@ -50,7 +67,13 @@ def inet_ntop(address_family, packed_ip):
     else:
         raise socket.error('unknown address family')
 
-    if WSAAddressToStringA(ctypes.byref(addr), addr_size, None, ip_string, ctypes.byref(ip_string_size)) != 0:
+    if WSAAddressToStringA(
+            ctypes.byref(addr),
+            addr_size,
+            None,
+            ip_string,
+            ctypes.byref(ip_string_size)
+    ) != 0:
         raise socket.error(ctypes.FormatError())
 
     return ip_string[:ip_string_size.value - 1]
