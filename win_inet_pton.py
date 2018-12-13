@@ -5,6 +5,7 @@
 
 import socket
 import os
+import sys
 
 
 def inject_into_socket():
@@ -44,6 +45,11 @@ def inject_into_socket():
         WSAGetLastError = not_windows
 
     def inet_pton(address_family, ip_string):
+        if sys.version_info[0] > 2and isinstance(ip_string, bytes):
+            raise TypeError("inet_pton() argument 2 must be str, not bytes")
+        elif hasattr(ip_string, "decode"):
+            ip_string = ip_string.decode("utf-8")
+
         if address_family == socket.AF_INET:
             family = 2
             addr = in_addr()
@@ -51,10 +57,7 @@ def inject_into_socket():
             family = 23
             addr = in6_addr()
         else:
-            raise socket.error("unknown address family")
-
-        if hasattr(ip_string, "decode"):
-            ip_string = ip_string.decode("utf-8")
+            raise OSError("unknown address family")
 
         ip_string = ctypes.c_wchar_p(ip_string)
         ret = InetPtonW(ctypes.c_int(family), ip_string, ctypes.byref(addr))
@@ -81,7 +84,7 @@ def inject_into_socket():
         if address_family == socket.AF_INET:
             addr = in_addr()
             if len(packed_ip) != ctypes.sizeof(addr.S_addr):
-                raise socket.error("packed IP wrong length for inet_ntop")
+                raise ValueError("packed IP wrong length for inet_ntop")
 
             ctypes.memmove(addr.S_addr, packed_ip, 4)
             buffer_len = 16
@@ -90,7 +93,7 @@ def inject_into_socket():
         elif address_family == socket.AF_INET6:
             addr = in6_addr()
             if len(packed_ip) != ctypes.sizeof(addr.Byte):
-                raise socket.error("packed IP wrong length for inet_ntop")
+                raise ValueError("packed IP wrong length for inet_ntop")
 
             ctypes.memmove(addr.Byte, packed_ip, 16)
             buffer_len = 46
@@ -109,12 +112,12 @@ def inject_into_socket():
         if ret is None:
             err = WSAGetLastError()
             if err == 10047:
-                e = socket.error("unknown address family")
+                e = ValueError("unknown address family")
             else:
                 e = OSError("unknown error from inet_ntop")
             e.errno = err
 
-        return ctypes.wstring_at(buffer, buffer_len)
+        return ctypes.wstring_at(buffer, buffer_len).rstrip("\x00")
 
     # Adding our two functions to the socket library
     socket.inet_pton = inet_pton
