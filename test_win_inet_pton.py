@@ -20,8 +20,8 @@ import win_inet_pton
 
 win_inet_pton.inject_into_socket()
 
-INET_PTON.append(orig_inet_pton)
-INET_NTOP.append(orig_inet_ntop)
+INET_PTON.append(socket.inet_pton)
+INET_NTOP.append(socket.inet_ntop)
 
 
 VALID_IP_ADDRESSES = [
@@ -48,7 +48,6 @@ VALID_IP_ADDRESSES = [
 INVALID_IP_ADDRESSES = [
     (socket.AF_INET, "1.1.1."),
     (socket.AF_INET, ".1.1.1"),
-    (socket.AF_INET, "1.1"),
     (socket.AF_INET, "256.1.1.1"),
     (socket.AF_INET, "-1.1.1.1"),
     (socket.AF_INET, "1.-1.1.1"),
@@ -115,9 +114,11 @@ def test_unknown_family(inet_pton, inet_ntop, family, address, packed):
 def test_valid_ip_addresses_unicode(inet_pton, inet_ntop, family, address, packed):
     if sys.version_info[0] == 3:
         with pytest.raises(TypeError):
-            inet_pton(family, address.encode("ascii"))
-        with pytest.raises(TypeError):
-            inet_ntop(family, ''.join(chr(x) for x in packed))
+            assert inet_pton(family, address.encode("ascii")) == packed
+
+        assert inet_pton(family, address) == packed
+        assert inet_ntop(family, packed) == address.lower()
     else:
         assert inet_pton(family, address.decode("ascii")) == packed
-        assert inet_ntop(family, packed.decode("ascii")) == address.lower()
+        assert inet_pton(family, address) == packed
+        assert inet_ntop(family, packed) == address.lower()

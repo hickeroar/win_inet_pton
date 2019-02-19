@@ -45,10 +45,8 @@ def inject_into_socket():
         WSAGetLastError = not_windows
 
     def inet_pton(address_family, ip_string):
-        if sys.version_info[0] > 2and isinstance(ip_string, bytes):
+        if sys.version_info[0] > 2 and isinstance(ip_string, bytes):
             raise TypeError("inet_pton() argument 2 must be str, not bytes")
-        elif hasattr(ip_string, "decode"):
-            ip_string = ip_string.decode("utf-8")
 
         if address_family == socket.AF_INET:
             family = 2
@@ -68,7 +66,7 @@ def inject_into_socket():
             else:
                 return ctypes.string_at(addr.Byte, 16)
         elif ret == 0:
-            raise OSError("illegal IP address string passed to inet_pton")
+            raise socket.error("illegal IP address string passed to inet_pton")
         else:
             err = WSAGetLastError()
             if err == 10047:
@@ -99,7 +97,7 @@ def inject_into_socket():
             buffer_len = 46
             family = 23
         else:
-            raise socket.error("unknown address family")
+            raise ValueError("unknown address family")
 
         buffer = ctypes.create_unicode_buffer(buffer_len)
 
